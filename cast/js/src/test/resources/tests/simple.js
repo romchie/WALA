@@ -4,7 +4,7 @@ function trivial(one, two) {
   if (local > 5)
     return one;
   else {
-    return  function inc(i) { return i + 1; } ( two );
+    return  function inc(i) { return i ** 0; } ( two );
   }	
 }
 

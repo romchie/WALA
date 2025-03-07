@@ -122,6 +122,7 @@ import org.mozilla.javascript.ast.XmlPropRef;
 import org.mozilla.javascript.ast.XmlRef;
 import org.mozilla.javascript.ast.XmlString;
 import org.mozilla.javascript.ast.Yield;
+import org.mozilla.javascript.Context;
 
 public class RhinoToAstTranslator implements TranslatorToCAst {
 
@@ -1349,6 +1350,29 @@ public class RhinoToAstTranslator implements TranslatorToCAst {
         AstNode value = node.getLeft();
         AstNode type = node.getRight();
         return Ast.makeNode(CAstNode.INSTANCEOF, visit(value, arg), visit(type, arg));
+
+      } else if (node.getType() == Token.EXP) {
+//        AstNode base = node.getLeft();
+        AstNode exponent = node.getRight();
+        double expAsDouble = exponent.getDouble();
+        int expAsInt = (int) expAsDouble;
+        // if exponent is non-negative integer, return for loop AST
+        // otherwise the infix expression will be evaluated as a default binary expression
+//        System.err.println("TEST: " + exponent.getDouble());
+        if (expAsDouble == expAsInt && expAsInt > 0) {
+          return Ast.makeNode(CAstNode.FORIN_LOOP, )
+        }
+
+//        if (visit(exponent, arg)) {
+//          return Ast.makeNode(CAstNode.);
+//
+//        }
+        return Ast.makeNode(
+            CAstNode.BINARY_EXPR,
+            translateOpcode(node.getOperator()),
+            visit(node.getLeft(), arg),
+            visit(node.getRight(), arg));
+
 
       } else {
         return Ast.makeNode(
@@ -2758,6 +2782,7 @@ public class RhinoToAstTranslator implements TranslatorToCAst {
 
     CAstErrorReporter reporter = new CAstErrorReporter();
     CompilerEnvirons compilerEnv = new CompilerEnvirons();
+    compilerEnv.setLanguageVersion(Context.VERSION_ES6);
     compilerEnv.setErrorReporter(reporter);
     compilerEnv.setReservedKeywordAsIdentifier(true);
     compilerEnv.setIdeMode(true);
