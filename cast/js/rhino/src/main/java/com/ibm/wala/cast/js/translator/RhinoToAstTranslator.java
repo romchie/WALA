@@ -271,7 +271,8 @@ public class RhinoToAstTranslator implements TranslatorToCAst {
       case Token.BITXOR:
       case Token.ASSIGN_BITXOR:
         return CAstOperator.OP_BIT_XOR;
-
+      case Token.EXP:
+        return CAstOperator.OP_POW;
       case Token.EQ:
       case Token.IFEQ:
         return CAstOperator.OP_EQ;
@@ -1352,21 +1353,28 @@ public class RhinoToAstTranslator implements TranslatorToCAst {
         return Ast.makeNode(CAstNode.INSTANCEOF, visit(value, arg), visit(type, arg));
 
       } else if (node.getType() == Token.EXP) {
-//        AstNode base = node.getLeft();
+        AstNode base = node.getLeft();
         AstNode exponent = node.getRight();
-        double expAsDouble = exponent.getDouble();
-        int expAsInt = (int) expAsDouble;
-        // if exponent is non-negative integer, return for loop AST
-        // otherwise the infix expression will be evaluated as a default binary expression
-//        System.err.println("TEST: " + exponent.getDouble());
-        if (expAsDouble == expAsInt && expAsInt > 0) {
-          return Ast.makeNode(CAstNode.FORIN_LOOP, )
+        // Check if exponent is number...
+        if (exponent.getType() == Token.NUMBER) {
+          double expAsDouble = exponent.getDouble();
+          int expAsInt = (int) expAsDouble;
+          // if exponent is non-negative integer, return for loop AST
+          // otherwise the infix expression will be evaluated as a default binary expression
+          if (expAsDouble == expAsInt && expAsInt >= 0) {
+            List<CAstNode> nodes = new ArrayList<>();
+            for (var i = 0; i < expAsInt; i++) {
+              // So this doesn't work because you can't re-use the same node...
+              nodes.add(Ast.makeNode(
+                  CAstNode.BINARY_EXPR,
+                  translateOpcode(Token.MUL),
+                  visit(base, arg),
+                  visit(base, arg)));
+            }
+            System.err.println("TEST: " + base.toString() + " " + exponent.getDouble());
+            return Ast.makeNode(nodes.isEmpty() ? CAstNode.EMPTY : CAstNode.BLOCK_STMT, nodes);
+          }
         }
-
-//        if (visit(exponent, arg)) {
-//          return Ast.makeNode(CAstNode.);
-//
-//        }
         return Ast.makeNode(
             CAstNode.BINARY_EXPR,
             translateOpcode(node.getOperator()),

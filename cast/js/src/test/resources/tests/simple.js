@@ -94,3 +94,9 @@ if ( F(6) !== 0 )
   bad(4, 5);
 else
   weird( silly( "whatever", 7 ) );
+
+function* simpleGenerator() {
+    yield 1;  // Pauses here and returns 1
+    yield 2;  // Pauses here and returns 2
+    yield 3;  // Pauses here and returns 3
+}
